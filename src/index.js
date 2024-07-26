@@ -6,6 +6,7 @@ const config = require("./main/config");
 
 const app = express();
 
+// Middleware untuk maintenance mode
 app.use((req, res, next) => {
   if (config.maintenanceMode) {
     const logMessage = `Service temporarily unavailable due to maintenance. Request from ${req.ip} blocked.`;
@@ -18,7 +19,8 @@ app.use((req, res, next) => {
   }
 });
 
-app.use((req, res, next) => {
+// Middleware untuk logging request ke /api
+const apiLoggerMiddleware = (req, res, next) => {
   const startTime = new Date();
 
   res.on("finish", () => {
@@ -36,8 +38,9 @@ app.use((req, res, next) => {
   });
 
   next();
-});
+};
 
+// Middleware untuk enable maintenance mode
 const enableMaintenanceMode = () => {
   // Check if maintenanceMode is already false
   if (!config.maintenanceMode) {
@@ -57,7 +60,9 @@ const enableMaintenanceMode = () => {
 enableMaintenanceMode();
 
 app.use(cors());
-app.use("/api", routes);
+
+// Gunakan middleware apiLoggerMiddleware hanya untuk request ke /api
+app.use("/api", apiLoggerMiddleware, routes);
 
 app.get("/", (req, res) => {
   const logMessage = `Welcome message sent to ${req.ip}.`;
