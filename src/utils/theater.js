@@ -38,11 +38,12 @@ const parseData = (html) => {
       }
     });
 
-    const { date } = parseShowInfo(showInfoFull);
+    const { showInfo, date } = parseShowInfo(showInfoFull);
 
     // Filter only the desired show data that has members
     if (showInfoFull.includes("Show") && !showInfoFull.includes("\n")) {
       scheduleData.push({
+        showInfo,
         setlist,
         members,
         birthdayMembers,
@@ -66,17 +67,16 @@ const parseData = (html) => {
 };
 
 const parseShowInfo = (showInfoFull) => {
-  const regex = /(\w+), (\d{1,2})\.(\d{1,2})\.(\d{4})Show (\d{1,2}:\d{2})/;
+  const regex = /(\w+), (\d{1,2}\.\d{1,2}\.\d{4})Show (\d{1,2}:\d{2})/;
   const match = showInfoFull.match(regex);
   let date, day, time;
 
   if (match) {
     day = match[1];
-    date = match[3]; // Only take the day part of the date
-    const year = match[4];
-    time = match[5];
+    date = match[2];
+    time = match[3];
     // Convert date to YYYY-MM-DD format for sorting
-    date = `${year}-${date}-01`;
+    date = date.split('.').reverse().join('-');
   } else {
     // Handle case where regex does not match
     date = showInfoFull.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim();
