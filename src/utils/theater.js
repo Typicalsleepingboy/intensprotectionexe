@@ -12,10 +12,11 @@ const fetchData = async () => {
 
 const parseData = (html) => {
   const $ = cheerio.load(html);
+  const table = $(".table");
   const scheduleData = [];
   
-  $("tbody tr").each((index, element) => {
-    const showInfoFull = $(element).find("td:nth-child(1)").html().trim();
+  table.find("tbody tr").each((index, element) => {
+    const showInfoFull = $(element).find("td:nth-child(1)").text().trim();
     const setlist = $(element).find("td:nth-child(2)").text().trim();
     const members = $(element)
       .find("td:nth-child(3) a")
@@ -37,12 +38,11 @@ const parseData = (html) => {
       }
     });
 
-    const { showInfo, date } = parseShowInfo(showInfoFull);
+    const { date } = parseShowInfo(showInfoFull);
 
     // Filter only the desired show data that has members
-    if (members.length > 0) {
+    if (showInfoFull.includes("Show") && !showInfoFull.includes("\n")) {
       scheduleData.push({
-        showInfo,
         setlist,
         members,
         birthdayMembers,
@@ -66,16 +66,17 @@ const parseData = (html) => {
 };
 
 const parseShowInfo = (showInfoFull) => {
-  const regex = /(\w+), (\d{1,2}\.\d{1,2}\.\d{4})<br>Show (\d{1,2}:\d{2})/;
+  const regex = /(\w+), (\d{1,2})\.(\d{1,2})\.(\d{4})Show (\d{1,2}:\d{2})/;
   const match = showInfoFull.match(regex);
   let date, day, time;
 
   if (match) {
     day = match[1];
-    date = match[2];
-    time = match[3];
+    date = match[3]; // Only take the day part of the date
+    const year = match[4];
+    time = match[5];
     // Convert date to YYYY-MM-DD format for sorting
-    date = date.split('.').reverse().join('-');
+    date = `${year}-${date}-01`;
   } else {
     // Handle case where regex does not match
     date = showInfoFull.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim();
