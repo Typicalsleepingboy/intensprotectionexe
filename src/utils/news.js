@@ -2,7 +2,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 
 const fetchNewsData = async () => {
-  const url = "https://jkt48.com/news/list?lang=id";
+  const url = "https://takagi.sousou-no-frieren.workers.dev/news/list?lang=id";
 
   try {
     const response = await axios.get(url);
