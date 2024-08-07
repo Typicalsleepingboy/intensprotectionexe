@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');  // Import the uuid package
 const startingTheaterId = 2776;
 
 const fetchData = async () => {
-  const url = "https://jkt48.com/theater/schedule";
+  const url = "https://takagi.sousou-no-frieren.workers.dev/theater/schedule";
   const result = await axios.get(url);
   return result.data;
 };
