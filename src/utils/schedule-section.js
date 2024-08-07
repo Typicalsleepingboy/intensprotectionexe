@@ -9,7 +9,7 @@ const mapMonthNumberToAbbreviation = (monthNumber) => {
 };
 
 const fetchScheduleSectionData = async () => {
-  const url = "https://jkt48.com/";
+  const url = "https://takagi.sousou-no-frieren.workers.dev/";
 
   try {
     const response = await axios.get(url);
