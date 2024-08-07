@@ -3,8 +3,25 @@ const cors = require("cors");
 const routes = require("./routes/routes");
 const { sendLogToDiscord } = require("./other/discordLogger");
 const config = require("./main/config");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
+
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  handler: (req, res) => {
+    const logMessage = `Rate limit reached for IP ${req.ip}.`;
+    sendLogToDiscord(logMessage, "Warning");
+
+    res.status(429).send({
+      message: "Too many requests from this IP, please try again after 15 minutes."
+    });
+  }
+});
+
+app.use(limiter);
 
 // Middleware untuk maintenance mode
 app.use((req, res, next) => {
@@ -70,7 +87,7 @@ app.get("/", (req, res) => {
   res.send({
     message: "Lu mau nyari apa?? mending join discord intens aja",
     author: "https://github.com/typicalsleepingboy",
-    discord : "https://discord.gg/48intenscommunity",
+    discord: "https://discord.gg/48intenscommunity",
   });
 });
 
