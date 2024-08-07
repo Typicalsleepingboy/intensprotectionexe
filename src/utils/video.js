@@ -2,7 +2,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 
 async function fetchHtmlFromJKT48() {
-  const url = "https://jkt48.com/";
+  const url = "https://takagi.sousou-no-frieren.workers.dev/";
   const response = await axios.get(url);
   return response.data;
 }
