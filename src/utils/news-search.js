@@ -3,7 +3,7 @@ const cheerio = require("cheerio");
 
 // Fungsi untuk mengambil HTML dari URL
 const fetchNewsSearchData = async (page) => {
-  const url = `https://jkt48.com/news/list?page=${page}&lang=id`;
+  const url = `https://takagi.sousou-no-frieren.workers.dev/news/list?page=${page}&lang=id`;
   try {
     const response = await axios.get(url);
     return response.data;
