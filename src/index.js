@@ -7,10 +7,10 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 
-// Rate limiting middleware
+
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 20 * 60 * 1000, 
+  max: 200,
   handler: (req, res) => {
     const logMessage = `Rate limit reached for IP ${req.ip}.`;
     sendLogToDiscord(logMessage, "Warning");
