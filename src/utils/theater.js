@@ -41,7 +41,7 @@ const parseData = (html) => {
     // Filter only the desired show data that has members
     if (showInfoFull.includes("Show") && !showInfoFull.includes("\n")) {
       scheduleData.push({
-        _id: uuidv4(),  // Add a UUID as _id
+        _ids: uuidv4(),  // Add a UUID as _id
         showInfo,
         setlist,
         members,
