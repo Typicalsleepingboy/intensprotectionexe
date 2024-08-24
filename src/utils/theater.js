@@ -2,8 +2,6 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const { v4: uuidv4 } = require('uuid');  // Import the uuid package
 
-const startingTheaterId = 2776;
-
 const fetchData = async () => {
   const url = "https://takagi.sousou-no-frieren.workers.dev/theater/schedule";
   const result = await axios.get(url);
@@ -43,6 +41,7 @@ const parseData = (html) => {
     // Filter only the desired show data that has members
     if (showInfoFull.includes("Show") && !showInfoFull.includes("\n")) {
       scheduleData.push({
+        _id: uuidv4(),  // Add a UUID as _id
         showInfo,
         setlist,
         members,
@@ -56,14 +55,7 @@ const parseData = (html) => {
   // Sort by date
   scheduleData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // Reassign theater IDs starting from the earliest show date and add random IDs
-  const updatedScheduleData = scheduleData.map((data, index) => ({
-    ...data,
-    theaterId: startingTheaterId + index,
-    intensId: uuidv4()  // Add a random ID
-  }));
-
-  return updatedScheduleData;
+  return scheduleData;
 };
 
 const parseShowInfo = (showInfoFull) => {
