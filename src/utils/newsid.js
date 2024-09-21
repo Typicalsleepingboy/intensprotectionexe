@@ -18,13 +18,14 @@ const parseNewsDetailData = (html) => {
 
   const title = $(".entry-news__detail h3").text();
   const date = $(".metadata2.mb-2").text();
-  const content = $(".entry-news__detail").find("p").map((i, el) => $(el).text().trim()).get();
-  const imageUrl = $(".entry-news__detail img").attr("src");
+
+  const content = $(".MsoNormal").map((i, el) => $(el).text().trim()).get();
+  const imageUrls = $(".MsoNormal img").map((i, el) => $(el).attr("src")).get();
 
   data["judul"] = title;
   data["tanggal"] = date;
   data["konten"] = content.join("\n");
-  data["gambar"] = imageUrl || null;
+  data["gambar"] = imageUrls.length > 0 ? imageUrls : null;  
 
   return data;
 };
