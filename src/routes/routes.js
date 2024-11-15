@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const { fetchData, parseData } = require("../utils/theater");
 const { fetchNewsData, parseNewsData } = require("../utils/news");
+const { fetchNewsDataMerch, parseNewsDataMerch } = require("../utils/merch");
 const { fetchSpecificData, parseSpecificData } = require("../utils/schedule");
 const { fetchBirthdayData, parseBirthdayData } = require("../utils/birthday");
 const { fetchMemberDataId, parseMemberDataId, fetchMemberSocialMediaId, parseMemberSocialMediaId } = require("../utils/memberid");
@@ -193,6 +194,21 @@ router.get("/news/detail/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+router.get("/merch", async (req, res) => {
+  try {
+    const htmlData = await fetchNewsDataMerch();
+    const merchData = parseNewsDataMerch(htmlData);
+    res.json(merchData);
+  } catch (error) {
+    console.error("Error fetching or parsing news data:", error);
+    const errorMessage = `Scraping news failed. Error: ${error.message}`;
+    sendLogToDiscord(errorMessage, "Error");
+
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 
 module.exports = router;
