@@ -204,6 +204,15 @@ router.get("/merch", async (req, res) => {
     console.error("Error fetching or parsing news data:", error);
     const errorMessage = `Scraping news failed. Error: ${error.message}`;
     sendLogToDiscord(errorMessage, "Error");
+<<<<<<< HEAD
+
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+=======
+>>>>>>> 1da4726deea8704f07aeae9d6d351d2640178760
 
     res.status(500).json({ error: "Internal Server Error" });
   }
