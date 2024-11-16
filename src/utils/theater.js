@@ -1,6 +1,6 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const { v4: uuidv4 } = require('uuid');  // Import the uuid package
+const { v4: uuidv4 } = require('uuid'); 
 
 const fetchData = async () => {
   const url = "https://takagi.sousou-no-frieren.workers.dev/theater/schedule";
@@ -24,7 +24,6 @@ const parseData = (html) => {
     const birthdayMembers = [];
     const graduationIcons = [];
 
-    // Check for birthday members
     $(element).find("td:nth-child(3)").children().each((i, el) => {
       if ($(el).is('br') && $(el).next().is('img') && $(el).next().attr('src').includes('cat5.png')) {
         $(el).next().nextAll('a').each((index, member) => {
@@ -36,26 +35,34 @@ const parseData = (html) => {
       }
     });
 
-    const { showInfo, date } = parseShowInfo(showInfoFull);
+    const { showInfo, date, time } = parseShowInfo(showInfoFull);
 
-    // Filter only the desired show data that has members
     if (showInfoFull.includes("Show") && !showInfoFull.includes("\n")) {
       scheduleData.push({
-        _ids: uuidv4(),  // Add a UUID as _id
+        _ids: uuidv4(), 
         showInfo,
         setlist,
         members,
         birthdayMembers,
         graduationIcons,
-        date // Include the date for sorting
+        date,
+        time
       });
     }
   });
 
-  // Sort by date
-  scheduleData.sort((a, b) => new Date(a.date) - new Date(b.date));
+  const currentTime = new Date();
+  const filteredScheduleData = scheduleData.filter(item => {
+    const showDateTime = new Date(`${item.date}T${item.time}`);
+    const cutoffTime = new Date(showDateTime);
+    cutoffTime.setHours(cutoffTime.getHours() + 4);
 
-  return scheduleData;
+    return currentTime <= cutoffTime;
+  });
+
+  filteredScheduleData.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+
+  return filteredScheduleData;
 };
 
 const parseShowInfo = (showInfoFull) => {
@@ -67,16 +74,15 @@ const parseShowInfo = (showInfoFull) => {
     day = match[1];
     date = match[2];
     time = match[3];
-    // Convert date to YYYY-MM-DD format for sorting
     date = date.split('.').reverse().join('-');
   } else {
-    // Handle case where regex does not match
     date = showInfoFull.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   return {
     showInfo: `${day ? day + ', ' : ''}${date ? date + ' ' : ''}${time || ''}`,
-    date
+    date,
+    time
   };
 };
 
