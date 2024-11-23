@@ -14,6 +14,7 @@ const { fetchNewsDetailData, parseNewsDetailData } = require("../utils/newsid");
 const { fetchScheduleSectionData, parseScheduleSectionData } = require("../utils/schedule-section");
 const { fetchHtmlFromJKT48, parseVideoData } = require("../utils/video");
 const { sendLogToDiscord } = require("../other/discordLogger");
+const { fetchYouTubeVideos } = require("../utils/youtube");
 
 router.get("/schedule", async (req, res) => {
   try {
@@ -25,6 +26,18 @@ router.get("/schedule", async (req, res) => {
     const errorMessage = `Scraping schedule failed. Error: ${error.message}`;
     sendLogToDiscord(errorMessage, "Error");
 
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/youtube", async (req, res) => {
+  try {
+    const youtubeData = await fetchYouTubeVideos();
+    res.json(youtubeData);
+  } catch (error) {
+    console.error("Error fetching YouTube data:", error);
+    const errorMessage = `Scraping YouTube data failed. Error: ${error.message}`;
+    sendLogToDiscord(errorMessage, "Error");
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
