@@ -54,11 +54,20 @@ const parseSpecificData = (html) => {
       model["badge_url"] = badge_img.attr("src") || null;
 
       const event_name_full = event.find("p").text().trim();
-      const event_name = event_name_full.slice(6).trim();
-      const event_jam = event_name_full.slice(0, 5).trim();
+      
+      // Check if the event name contains a time (usually starts with the time, like 19:00)
+      const event_time = event_name_full.slice(0, 5).trim();
+      let event_name = event_name_full.slice(6).trim();
 
-      model["event_name"] = event_name || "-";
-      model["event_time"] = event_jam || "-";
+      if (event_time.match(/^\d{2}:\d{2}$/)) {
+        // If the event name has a time, we treat it separately
+        model["event_time"] = event_time;
+        model["event_name"] = event_name || "-";
+      } else {
+        // If no time in the event name, set event_time as an empty string
+        model["event_time"] = "";
+        model["event_name"] = event_name_full || "-"; // Keep the full name without trimming
+      }
 
       const url_event_full = event.find("a").attr("href") || "";
       const url_event_full_rplc = url_event_full.replace("?lang=id", "");
@@ -94,6 +103,7 @@ const parseSpecificData = (html) => {
 
   return lists;
 };
+
 
 
 module.exports = {
