@@ -25,7 +25,6 @@ const parseData = (html) => {
         const birthdayMembers = [];
         const graduationIcons = [];
 
-        // Check for birthday members
         $(element).find("td:nth-child(3)").children().each((i, el) => {
             if ($(el).is('br') && $(el).next().is('img') && $(el).next().attr('src').includes('cat5.png')) {
                 $(el).next().nextAll('a').each((index, member) => {
@@ -41,14 +40,14 @@ const parseData = (html) => {
 
         if (showInfoFull.includes("Show") && !showInfoFull.includes("\n")) {
             scheduleData.push({
-                _ids: uuidv4(),
+                _ids: uuidv4(), 
                 showInfo,
                 setlist,
                 members,
                 birthdayMembers,
                 graduationIcons,
                 date,
-                time
+                time 
             });
         }
     });
@@ -56,7 +55,7 @@ const parseData = (html) => {
     const currentTime = moment.tz("Asia/Jakarta");
     const filteredScheduleData = scheduleData.filter(item => {
         const showDateTime = moment.tz(`${item.date} ${item.time}`, "YYYY-MM-DD HH:mm", "Asia/Jakarta");
-        const cutoffTime = showDateTime.add(4, 'hours');
+        const cutoffTime = showDateTime.add(4, 'hours'); 
 
         return currentTime.isBefore(cutoffTime);
     });

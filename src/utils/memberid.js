@@ -3,7 +3,7 @@ const cheerio = require("cheerio");
 
 const fetchMemberDataId = async (memberId) => {
   try {
-    const response = await axios.get(`https://takagi.sousou-no-frieren.workers.dev/detail/id/${memberId}?lang=id`);
+    const response = await axios.get(`https://takagi.sousou-no-frieren.workers.dev/member/detail/id/${memberId}?lang=id`);
     return response.data;
   } catch (error) {
     throw error;
