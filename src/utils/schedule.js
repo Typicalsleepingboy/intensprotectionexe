@@ -42,12 +42,12 @@ const parseSpecificData = (html) => {
       const event = list_event.eq(position_event);
       const model = {};
 
-      // Format tanggal as tanggal/bulan/tahun
+      // Correct date format: tanggal/bulan/tahun
       const tanggal_parts = tanggal.split(" ");
       const formattedDate = `${tanggal_parts[0]}/${bulan_tahun.split(" ")[1]}/${bulan_tahun.split(" ")[0]}`;
 
       // Set hari and tanggal_full as separate fields
-      model["hari"] = `(${hari})`;
+      model["hari"] = `${hari}`;
       model["tanggal_full"] = formattedDate;
 
       const badge_img = event.find("span img");
@@ -94,6 +94,7 @@ const parseSpecificData = (html) => {
 
   return lists;
 };
+
 
 module.exports = {
   fetchSpecificData,
