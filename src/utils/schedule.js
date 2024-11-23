@@ -1,8 +1,8 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const fetchSpecificData = async () => {
-  const url = "https://takagi.sousou-no-frieren.workers.dev/calendar/list?lang=id";
+const fetchCalendarByMonth = async (year, month) => {
+  const url = `https://jkt48.com/calendar/list/y/${year}/m/${month}/d/1?lang=id`;
 
   try {
     const response = await axios.get(url);
@@ -12,7 +12,7 @@ const fetchSpecificData = async () => {
   }
 };
 
-const parseSpecificData = (html) => {
+const parseCalendarData = (html) => {
   const $ = cheerio.load(html);
 
   const tableBody = $("tbody");
@@ -42,11 +42,9 @@ const parseSpecificData = (html) => {
       const event = list_event.eq(position_event);
       const model = {};
 
-      // Correct date format: tanggal/bulan/tahun
       const tanggal_parts = tanggal.split(" ");
       const formattedDate = `${tanggal_parts[0]}/${bulan_tahun.split(" ")[1]}/${bulan_tahun.split(" ")[0]}`;
 
-      // Set hari and tanggal_full as separate fields
       model["hari"] = `${hari}`;
       model["tanggal_full"] = formattedDate;
 
@@ -55,18 +53,15 @@ const parseSpecificData = (html) => {
 
       const event_name_full = event.find("p").text().trim();
       
-      // Check if the event name contains a time (usually starts with the time, like 19:00)
       const event_time = event_name_full.slice(0, 5).trim();
       let event_name = event_name_full.slice(6).trim();
 
       if (event_time.match(/^\d{2}:\d{2}$/)) {
-        // If the event name has a time, we treat it separately
         model["event_time"] = event_time;
         model["event_name"] = event_name || "-";
       } else {
-        // If no time in the event name, set event_time as an empty string
         model["event_time"] = "";
-        model["event_name"] = event_name_full || "-"; // Keep the full name without trimming
+        model["event_name"] = event_name_full || "-";
       }
 
       const url_event_full = event.find("a").attr("href") || "";
@@ -82,7 +77,6 @@ const parseSpecificData = (html) => {
     }
 
     if (size_of_event === 0) {
-      // Ensure formattedDate is defined here as well
       const tanggal_parts = tanggal.split(" ");
       const formattedDate = `${tanggal_parts[0]}/${bulan_tahun.split(" ")[1]}/${bulan_tahun.split(" ")[0]}`;
 
@@ -105,8 +99,57 @@ const parseSpecificData = (html) => {
 };
 
 
+const validateDate = (year, month) => {
+  const currentYear = new Date().getFullYear();
+  
+  if (isNaN(year) || isNaN(month)) {
+    throw new Error("Year and month must be numbers");
+  }
+  
+  if (month < 1 || month > 12) {
+    throw new Error("Month must be between 1 and 12");
+  }
+  
+  if (year < 2000 || year > currentYear + 1) {
+    throw new Error(`Year must be between 2000 and ${currentYear + 1}`);
+  }
+  
+  return true;
+};
+
+const getCalendarByMonth = async (year, month) => {
+  try {
+    validateDate(year, month);
+    
+    const paddedMonth = month.toString().padStart(2, '0');
+    
+    const html = await fetchCalendarByMonth(year, paddedMonth);
+    const parsedData = parseCalendarData(html);
+    
+    return {
+      success: true,
+      data: parsedData,
+      meta: {
+        year: year,
+        month: paddedMonth,
+        total_events: parsedData.filter(item => item.have_event).length,
+        total_days: parsedData.length
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      meta: {
+        year: year,
+        month: month
+      }
+    };
+  }
+};
 
 module.exports = {
-  fetchSpecificData,
-  parseSpecificData,
+  getCalendarByMonth,
+  fetchCalendarByMonth,
+  parseCalendarData,
 };
