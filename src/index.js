@@ -4,12 +4,13 @@ const routes = require("./routes/routes");
 const { sendLogToDiscord } = require("./other/discordLogger");
 const config = require("./main/config");
 const rateLimit = require("express-rate-limit");
+require('dotenv').config();
 
 const app = express();
 app.set('trust proxy', true);
 
 const limiter = rateLimit({
-  windowMs: 20 * 60 * 1000, 
+  windowMs: 20 * 60 * 1000,
   max: 200,
   handler: (req, res) => {
     const logMessage = `Rate limit reached for IP ${req.ip}.`;
@@ -36,7 +37,6 @@ app.use((req, res, next) => {
   }
 });
 
-// Middleware untuk logging request ke /api
 const apiLoggerMiddleware = (req, res, next) => {
   const startTime = new Date();
 
@@ -57,9 +57,8 @@ const apiLoggerMiddleware = (req, res, next) => {
   next();
 };
 
-// Middleware untuk enable maintenance mode
+
 const enableMaintenanceMode = () => {
-  // Check if maintenanceMode is already false
   if (!config.maintenanceMode) {
     const logMessage = "Maintenance mode disabled.";
     sendLogToDiscord(logMessage, "Info");
@@ -78,7 +77,6 @@ enableMaintenanceMode();
 
 app.use(cors());
 
-// Gunakan middleware apiLoggerMiddleware hanya untuk request ke /api
 app.use("/api", apiLoggerMiddleware, routes);
 
 app.get("/", (req, res) => {
