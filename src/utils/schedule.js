@@ -42,8 +42,13 @@ const parseSpecificData = (html) => {
       const event = list_event.eq(position_event);
       const model = {};
 
-      // Concatenate bulan_tahun, tanggal, and hari into one field
-      model["tanggal_full"] = `${bulan_tahun} ${tanggal} (${hari})`;
+      // Format tanggal as tanggal/bulan/tahun
+      const tanggal_parts = tanggal.split(" ");
+      const formattedDate = `${tanggal_parts[0]}/${bulan_tahun.split(" ")[1]}/${bulan_tahun.split(" ")[0]}`;
+
+      // Set hari and tanggal_full as separate fields
+      model["hari"] = `(${hari})`;
+      model["tanggal_full"] = formattedDate;
 
       const badge_img = event.find("span img");
       model["badge_url"] = badge_img.attr("src") || null;
@@ -69,7 +74,8 @@ const parseSpecificData = (html) => {
 
     if (size_of_event === 0) {
       const model = {
-        tanggal_full: `${bulan_tahun} ${tanggal} (${hari})`,
+        hari: `(${hari})`,
+        tanggal_full: formattedDate,
         badge_url: null,
         event_name: null,
         event_time: null,
@@ -84,6 +90,7 @@ const parseSpecificData = (html) => {
 
   return lists;
 };
+
 
 
 module.exports = {
