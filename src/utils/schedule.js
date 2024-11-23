@@ -73,8 +73,12 @@ const parseSpecificData = (html) => {
     }
 
     if (size_of_event === 0) {
+      // Ensure formattedDate is defined here as well
+      const tanggal_parts = tanggal.split(" ");
+      const formattedDate = `${tanggal_parts[0]}/${bulan_tahun.split(" ")[1]}/${bulan_tahun.split(" ")[0]}`;
+
       const model = {
-        hari: `(${hari})`,
+        hari: `${hari}`,
         tanggal_full: formattedDate,
         badge_url: null,
         event_name: null,
@@ -90,8 +94,6 @@ const parseSpecificData = (html) => {
 
   return lists;
 };
-
-
 
 module.exports = {
   fetchSpecificData,
