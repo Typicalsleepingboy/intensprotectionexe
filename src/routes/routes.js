@@ -4,7 +4,7 @@ const router = express.Router();
 const { fetchData, parseData } = require("../utils/theater");
 const { fetchNewsData, parseNewsData } = require("../utils/news");
 const { fetchNewsDataMerch, parseNewsDataMerch } = require("../utils/merch");
-const { fetchSpecificData, parseSpecificData } = require("../utils/schedule");
+const { getCalendarByMonth } = require("../utils/schedule");
 const { fetchBirthdayData, parseBirthdayData } = require("../utils/birthday");
 const { fetchMemberDataId, parseMemberDataId, fetchMemberSocialMediaId, parseMemberSocialMediaId } = require("../utils/memberid");
 const { fetchNewsSearchData, parseNewsSearchData } = require("../utils/news-search");
@@ -58,18 +58,75 @@ router.get("/news", async (req, res) => {
 
 router.get("/events_jkt48", async (req, res) => {
   try {
-    const htmlData = await fetchSpecificData();
-    const specificData = parseSpecificData(htmlData);
-    res.status(200).json({ success: true, data: specificData });
+    const today = new Date();
+    const year = parseInt(req.query.year) || today.getFullYear();
+    const month = parseInt(req.query.month) || today.getMonth() + 1;
+
+    const result = await getCalendarByMonth(year, month);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.data,
+      meta: result.meta,
+      timestamp: new Date().toISOString()
+    });
+
   } catch (error) {
-    console.error("Error fetching or parsing specific data:", error);
-    const errorMessage = `Scraping events failed. Error: ${error.message}`;
+    console.error("Error fetching or parsing calendar data:", error);
+    const errorMessage = `Scraping JKT48 calendar failed. Error: ${error.message}`;
     sendLogToDiscord(errorMessage, "Error");
 
-    res.status(500).json({ success: false, error: "Internal Server Error" });
+    res.status(500).json({ 
+      success: false, 
+      error: "Internal Server Error",
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
+router.get("/events_jkt48/available-months", async (req, res) => {
+  try {
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const months = [];
+    
+    // Check each month of the specified year
+    for (let month = 1; month <= 12; month++) {
+      const result = await getCalendarByMonth(year, month);
+      if (result.success && result.data.some(event => event.have_event)) {
+        months.push({
+          month,
+          totalEvents: result.meta.total_events
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: months,
+      meta: {
+        year,
+        totalMonths: months.length,
+        totalEvents: months.reduce((sum, month) => sum + month.totalEvents, 0)
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error("Error fetching available months:", error);
+    const errorMessage = `Fetching available months failed. Error: ${error.message}`;
+    sendLogToDiscord(errorMessage, "Error");
+
+    res.status(500).json({ 
+      success: false, 
+      error: "Internal Server Error",
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 router.get("/birthdays", async (req, res) => {
   try {
     const htmlData = await fetchBirthdayData();
