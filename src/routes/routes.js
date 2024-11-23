@@ -56,7 +56,7 @@ router.get("/news", async (req, res) => {
   }
 });
 
-router.get("/events", async (req, res) => {
+router.get("/events_jkt48", async (req, res) => {
   try {
     const htmlData = await fetchSpecificData();
     const specificData = parseSpecificData(htmlData);
