@@ -42,9 +42,8 @@ const parseSpecificData = (html) => {
       const event = list_event.eq(position_event);
       const model = {};
 
-      model["bulan_tahun"] = bulan_tahun;
-      model["tanggal"] = tanggal;
-      model["hari"] = hari;
+      // Concatenate bulan_tahun, tanggal, and hari into one field
+      model["tanggal_full"] = `${bulan_tahun} ${tanggal} (${hari})`;
 
       const badge_img = event.find("span img");
       model["badge_url"] = badge_img.attr("src") || null;
@@ -70,9 +69,7 @@ const parseSpecificData = (html) => {
 
     if (size_of_event === 0) {
       const model = {
-        bulan_tahun,
-        tanggal,
-        hari,
+        tanggal_full: `${bulan_tahun} ${tanggal} (${hari})`,
         badge_url: null,
         event_name: null,
         event_time: null,
