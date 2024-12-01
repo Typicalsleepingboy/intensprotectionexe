@@ -193,11 +193,11 @@ async function fetchFreshData() {
             (a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)
         );
 
-        const limitedVideos = allVideos.slice(0, 3);
+        const limitedVideos = allVideos.slice(0, 6);
 
         if (limitedVideos.length < 3) {
             const cachedVideos = cache.get('youtube_videos') || [];
-            limitedVideos.push(...cachedVideos.slice(0, 3 - limitedVideos.length));
+            limitedVideos.push(...cachedVideos.slice(0, 6 - limitedVideos.length));
         }
 
         cache.set('youtube_videos', limitedVideos, CACHE_DURATION);
