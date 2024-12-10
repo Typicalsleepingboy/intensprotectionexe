@@ -6,7 +6,7 @@ const fetchNewsDetailData = async (id) => {
 
   try {
     const response = await axios.get(url);
-    return parseNewsDetail(response.data);
+    return parseNewsDetailData(response.data);
   } catch (error) {
     console.error("Error fetching news detail:", error);
     return null;
