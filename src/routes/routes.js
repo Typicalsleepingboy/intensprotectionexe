@@ -10,7 +10,7 @@ const { fetchMemberDataId, parseMemberDataId, fetchMemberSocialMediaId, parseMem
 const { fetchNewsSearchData, parseNewsSearchData } = require("../utils/news-search");
 const { fetchMemberData, parseMemberData } = require("../utils/member");
 const { fetchBannerData, parseBannerData } = require("../utils/banner");
-const { fetchNewsDetailData, parseNewsDetailData } = require("../utils/newsid");
+const { fetchNewsDetailData } = require("../utils/newsid");
 const { fetchScheduleSectionData, parseScheduleSectionData } = require("../utils/schedule-section");
 const { fetchHtmlFromJKT48, parseVideoData } = require("../utils/video");
 const { sendLogToDiscord } = require("../other/discordLogger");
@@ -253,17 +253,22 @@ router.get("/news/detail/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const htmlData = await fetchNewsDetailData(id);
-    const newsDetailData = parseNewsDetailData(htmlData);
+    const newsDetailData = await fetchNewsDetailData(id);
+
+    if (!newsDetailData) {
+      throw new Error("News detail data is empty or could not be parsed.");
+    }
+
     res.json(newsDetailData);
   } catch (error) {
     console.error("Error fetching or parsing news detail data:", error);
-    const errorMessage = `Scraping news detail failed. Error: ${error.message}`;
+    const errorMessage = `Scraping news detail failed. ID: ${id}, Error: ${error.message}`;
     sendLogToDiscord(errorMessage, "Error");
 
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 router.get("/merch", async (req, res) => {
   try {
