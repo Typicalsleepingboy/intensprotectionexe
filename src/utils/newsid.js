@@ -53,4 +53,6 @@ const parseNewsDetailData = (html) => {
 
 module.exports = {
   fetchNewsDetailData,
+    parseNewsDetailData,
+
 };
