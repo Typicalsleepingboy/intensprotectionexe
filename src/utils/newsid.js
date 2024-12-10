@@ -1,7 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const fetchNewsDetail = async (id) => {
+const fetchNewsDetailData = async (id) => {
   const url = `https://takagi.sousou-no-frieren.workers.dev/news/detail/id/${id}?lang=id`;
 
   try {
@@ -13,7 +13,7 @@ const fetchNewsDetail = async (id) => {
   }
 };
 
-const parseNewsDetail = (html) => {
+const parseNewsDetailData = (html) => {
   const $ = cheerio.load(html);
   const data = {};
 
@@ -52,5 +52,5 @@ const parseNewsDetail = (html) => {
 };
 
 module.exports = {
-  fetchNewsDetail,
+  fetchNewsDetailData,
 };
