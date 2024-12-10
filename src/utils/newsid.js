@@ -8,8 +8,7 @@ const fetchNewsDetailData = async (id) => {
     const response = await axios.get(url);
     return parseNewsDetailData(response.data);
   } catch (error) {
-    console.error("Error fetching news detail:", error);
-    return null;
+    throw new Error(`Error fetching data: ${error.message}`);
   }
 };
 
@@ -22,21 +21,27 @@ const parseNewsDetailData = (html) => {
 
   let content = $(".MsoNormal")
     .map((i, el) => {
-      $(el).find('span[style*="mso-tab-count"]').remove();
+      $(el).find('span[style*="mso-tab-count"]').remove(); // Remove unwanted tabs
       return $(el).text().trim();
     })
     .get()
     .join("\n");
 
+  // Fallback to get content if MsoNormal elements are empty
   if (!content.trim()) {
-    content = $("div").filter((i, el) => {
-      return $(el).text().trim() !== '' && 
-             !$(el).attr('class') && 
-             !$(el).hasClass('sidebar__language') && 
-             !$(el).hasClass('MsoNormal');
-    }).map((i, el) => $(el).text().trim()).get().join("\n");
+    content = $("div")
+      .filter((i, el) => {
+        return $(el).text().trim() !== '' &&
+               !$(el).attr('class') &&
+               !$(el).hasClass('sidebar__language') &&
+               !$(el).hasClass('MsoNormal');
+      })
+      .map((i, el) => $(el).text().trim())
+      .get()
+      .join("\n");
   }
 
+  // Remove language labels if present
   content = content.replace(/INDONESIAN|日本語/g, '').trim();
 
   const imageUrls = $(".MsoNormal img")
@@ -50,9 +55,8 @@ const parseNewsDetailData = (html) => {
 
   return data;
 };
-
-module.exports = {
-  fetchNewsDetailData,
+  
+  module.exports = {
+    fetchNewsDetailData,
     parseNewsDetailData,
-
-};
+  };
