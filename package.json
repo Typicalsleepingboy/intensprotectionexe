@@ -23,6 +23,7 @@
     "express-rate-limit": "^7.4.0",
     "moment-timezone": "^0.5.46",
     "mongoose": "^8.5.1",
+    "node-cache": "^5.1.2",
     "node-fetch": "^3.3.2",
     "puppeteer": "^22.15.0",
     "puppeteer-extra": "^3.3.6",
