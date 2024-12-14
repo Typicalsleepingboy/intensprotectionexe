@@ -30,15 +30,25 @@ router.get("/schedule", async (req, res) => {
   }
 });
 
-router.get("/youtubee_jkt48", async (req, res) => {
+router.get("/youtube_jkt48", async (req, res) => {
   try {
-    const youtubeData = await fetchYouTubeVideos();
-    res.json(youtubeData);
+    const forceRefresh = req.query.refresh === 'true';
+    if (forceRefresh) {
+      const freshData = await fetchFreshData();
+      return res.json({
+        success: true,
+        data: freshData,
+        source: 'forced_refresh'
+      });
+    }
+
+    const result = await fetchYouTubeVideos();
+    res.json(result);
   } catch (error) {
-    console.error("Error fetching YouTube data:", error);
-    const errorMessage = `Scraping YouTube data failed. Error: ${error.message}`;
-    sendLogToDiscord(errorMessage, "Error");
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 });
 
