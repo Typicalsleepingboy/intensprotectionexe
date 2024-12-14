@@ -144,7 +144,7 @@ app.get("/", (req, res) => {
   const logMessage = `Welcome message sent to ${req.ip}.`;
   sendLogToDiscord(logMessage);
   res.send({
-    message: "Lu mau nyari apa?? mending join discord intens aja",
+    message: "Lu mau nyari apa pantek???",
     author: "https://github.com/typicalsleepingboy",
     discord: "https://discord.gg/48intenscommunity",
   });

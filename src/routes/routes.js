@@ -30,7 +30,7 @@ router.get("/schedule", async (req, res) => {
   }
 });
 
-router.get("/youtube_jkt48", async (req, res) => {
+router.get("/youtubee_jkt48", async (req, res) => {
   try {
     const youtubeData = await fetchYouTubeVideos();
     res.json(youtubeData);
