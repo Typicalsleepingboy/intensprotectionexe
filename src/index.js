@@ -80,56 +80,7 @@ enableMaintenanceMode();
 
 app.use(cors());
 
-const processingRequests = new Map();
-
-app.use("/api", async (req, res, next) => {
-  const cacheKey = req.originalUrl;
-  
-  const cachedData = apiCache.get(cacheKey);
-  if (cachedData) {
-    return res.json({ source: "cache", data: cachedData });
-  }
-
-  if (processingRequests.has(cacheKey)) {
-    try {
-      const result = await processingRequests.get(cacheKey);
-      return res.json(result);
-    } catch (error) {
-      return next(error);
-    }
-  }
-
-  const processDataPromise = new Promise(async (resolve, reject) => {
-    try {
-      const result = await new Promise((resolveRoute, rejectRoute) => {
-        const mockRes = {
-          json: (data) => resolveRoute(data),
-          status: () => mockRes
-        };
-
-        routes(req, mockRes, (err) => {
-          if (err) rejectRoute(err);
-        });
-      });
-      
-      apiCache.set(cacheKey, result);
-      resolve(result);
-    } catch (error) {
-      reject(error);
-    } finally {
-      processingRequests.delete(cacheKey);
-    }
-  });
-
-  processingRequests.set(cacheKey, processDataPromise);
-
-  try {
-    const result = await processDataPromise;
-    res.json(result);
-  } catch (error) {
-    next(error);
-  }
-});
+app.use("/api", apiLoggerMiddleware, routes);
 
 
 app.get('/cache-status', (req, res) => {
