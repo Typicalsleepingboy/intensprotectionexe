@@ -36,7 +36,9 @@ async function fetchYouTubeVideos() {
             const channelVideos = response.data.items.map(item => ({
                 id: item.id.videoId,
                 title: item.snippet.title,
+                channelId: item.snippet.channelId,
                 publishedAt: item.snippet.publishedAt,
+                channelTitle: item.snippet.channelTitle,
                 thumbnails: item.snippet.thumbnails,
                 url: `https://www.youtube.com/watch?v=${item.id.videoId}`
             }));
