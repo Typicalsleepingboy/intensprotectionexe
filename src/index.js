@@ -25,7 +25,7 @@ const limiter = rateLimit({
   },
 });
 
-app.use(limiter);
+
 
 app.use((req, res, next) => {
   if (config.maintenanceMode) {
@@ -40,10 +40,10 @@ app.use((req, res, next) => {
 });
 
 const apiLoggerMiddleware = (req, res, next) => {
-  const startTime = new Date();
+  const startTime = Date.now();
 
   res.on("finish", () => {
-    const endTime = new Date();
+    const endTime = Date.now();
     const responseTime = endTime - startTime;
 
     const requestData = {
@@ -52,12 +52,16 @@ const apiLoggerMiddleware = (req, res, next) => {
       responseTime,
     };
 
-    const logMessage = `Request handled successfully. Method: ${req.method}, URL: ${req.originalUrl}`;
+    const logMessage = `Request handled: Method: ${req.method}, URL: ${req.originalUrl}, Response Time: ${responseTime}ms`;
     sendLogToDiscord(logMessage, "Info", requestData);
   });
 
   next();
 };
+
+app.use(limiter);
+app.use(apiLoggerMiddleware);
+
 
 const enableMaintenanceMode = () => {
   if (!config.maintenanceMode) {

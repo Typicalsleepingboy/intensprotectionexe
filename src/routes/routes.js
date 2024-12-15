@@ -30,27 +30,35 @@ router.get("/schedule", async (req, res) => {
   }
 });
 
-router.get("/youtube_jkt48", async (req, res) => {
+router.get('/youtube_jkt48', async (req, res) => {
   try {
-    const forceRefresh = req.query.refresh === 'true';
-    if (forceRefresh) {
-      const freshData = await fetchFreshData();
-      return res.json({
+    const result = await fetchYouTubeVideos();
+    
+    if (result.data.length > 0) {
+      res.json({
         success: true,
-        data: freshData,
-        source: 'forced_refresh'
+        source: result.source,
+        data: result.data,
+        fetchedAt: new Date().toISOString()
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'No YouTube videos found',
+        source: result.source
       });
     }
-
-    const result = await fetchYouTubeVideos();
-    res.json(result);
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    console.error('YouTube Fetch Error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error while fetching YouTube videos',
+      source: 'error'
     });
   }
 });
+
 
 router.get("/news", async (req, res) => {
   try {
