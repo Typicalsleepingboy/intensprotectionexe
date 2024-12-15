@@ -9,8 +9,6 @@ require("dotenv").config();
 const app = express();
 app.set("trust proxy", true);
 
-const NodeCache = require("node-cache");
-const apiCache = new NodeCache({ stdTTL: 300 }); 
 
 const limiter = rateLimit({
   windowMs: 20 * 60 * 1000,
