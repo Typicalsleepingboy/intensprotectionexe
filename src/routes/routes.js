@@ -4,7 +4,7 @@ const router = express.Router();
 const { fetchData, parseData } = require("../utils/theater");
 const { fetchNewsData, parseNewsData } = require("../utils/news");
 const { fetchNewsDataMerch, parseNewsDataMerch } = require("../utils/merch");
-const { getCalendarByMonth } = require("../utils/schedule");
+const { scrapeSchedule } = require("../utils/schedule");
 const { fetchBirthdayData, parseBirthdayData } = require("../utils/birthday");
 const { fetchMemberDataId, parseMemberDataId, fetchMemberSocialMediaId, parseMemberSocialMediaId } = require("../utils/memberid");
 const { fetchNewsSearchData, parseNewsSearchData } = require("../utils/news-search");
@@ -74,37 +74,24 @@ router.get("/news", async (req, res) => {
   }
 });
 
-router.get("/events_jkt48", async (req, res) => {
+
+router.get('/events_jkt48', async (req, res) => {
   try {
-    const today = new Date();
-    const year = parseInt(req.query.year) || today.getFullYear();
-    const month = parseInt(req.query.month) || today.getMonth() + 1;
+      const { year, month } = req.query;
 
-    const result = await getCalendarByMonth(year, month);
+      if (!year || !month) {
+          return res.status(400).json({ error: 'Year and month are required' });
+      }
 
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    res.status(200).json({
-      success: true,
-      data: result.data,
-      meta: result.meta,
-      timestamp: new Date().toISOString()
-    });
-
+      const events = await scrapeSchedule(year, month);
+      res.json(events);
   } catch (error) {
-    console.error("Error fetching or parsing calendar data:", error);
-    const errorMessage = `Scraping JKT48 calendar failed. Error: ${error.message}`;
-    sendLogToDiscord(errorMessage, "Error");
-
-    res.status(500).json({ 
-      success: false, 
-      error: "Internal Server Error",
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+      console.error(error.message);
+      res.status(500).json({ error: 'Failed to fetch data' });
   }
 });
+
+
 
 router.get("/events_jkt48/available-months", async (req, res) => {
   try {

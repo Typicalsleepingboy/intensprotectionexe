@@ -21,7 +21,7 @@ const parseData = (html) => {
             .find("td:nth-child(3) a")
             .map((i, el) => $(el).text().trim())
             .get();
-
+        
         const birthdayMembers = [];
         const graduationIcons = [];
 
@@ -55,9 +55,14 @@ const parseData = (html) => {
     const currentTime = moment.tz("Asia/Jakarta");
     const filteredScheduleData = scheduleData.filter(item => {
         const showDateTime = moment.tz(`${item.date} ${item.time}`, "YYYY-MM-DD HH:mm", "Asia/Jakarta");
-        return showDateTime.isAfter(currentTime);
+        // Keep shows that end less than 4 hours ago
+        return showDateTime.clone().add(4, 'hours').isAfter(currentTime);
     });
-    filteredScheduleData.sort((a, b) => moment(`${a.date} ${a.time}`, "YYYY-MM-DD HH:mm").diff(moment(`${b.date} ${b.time}`, "YYYY-MM-DD HH:mm")));
+
+    filteredScheduleData.sort((a, b) => 
+        moment(`${a.date} ${a.time}`, "YYYY-MM-DD HH:mm")
+        .diff(moment(`${b.date} ${b.time}`, "YYYY-MM-DD HH:mm"))
+    );
 
     return filteredScheduleData;
 };
