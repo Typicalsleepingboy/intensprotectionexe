@@ -75,21 +75,55 @@ router.get("/news", async (req, res) => {
 });
 
 
-router.get('/events_jkt48', async (req, res) => {
+router.get("/events_jkt48", async (req, res) => {
   try {
-      const { year, month } = req.query;
+    const today = new Date();
+    const year = parseInt(req.query.year) || today.getFullYear();
+    const month = parseInt(req.query.month) || today.getMonth() + 1;
 
-      if (!year || !month) {
-          return res.status(400).json({ error: 'Year and month are required' });
-      }
+    if (isNaN(year) || isNaN(month)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid year or month parameter',
+        message: 'Year and month must be valid integers'
+      });
+    }
 
-      const events = await scrapeSchedule(year, month);
-      res.json(events);
+    const events = await scrapeSchedule(year, month); 
+
+    if (events.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No events found',
+        message: `No events found for ${year}-${month}`
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: events,
+      meta: {
+        year,
+        month,
+        total_events: events.length,
+      },
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
-      console.error(error.message);
-      res.status(500).json({ error: 'Failed to fetch data' });
+    console.error("Error fetching or parsing calendar data:", error);
+    
+    const errorMessage = `Scraping JKT48 calendar failed. Error: ${error.message}`;
+
+    sendLogToDiscord(errorMessage, "Error");
+
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred'
+    });
   }
 });
+
 
 
 
@@ -97,8 +131,7 @@ router.get("/events_jkt48/available-months", async (req, res) => {
   try {
     const year = parseInt(req.query.year) || new Date().getFullYear();
     const months = [];
-    
-    // Check each month of the specified year
+  
     for (let month = 1; month <= 12; month++) {
       const result = await getCalendarByMonth(year, month);
       if (result.success && result.data.some(event => event.have_event)) {
