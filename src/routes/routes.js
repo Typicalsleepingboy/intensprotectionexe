@@ -15,6 +15,7 @@ const { fetchScheduleSectionData, parseScheduleSectionData } = require("../utils
 const { fetchHtmlFromJKT48, parseVideoData } = require("../utils/video");
 const { sendLogToDiscord } = require("../other/discordLogger");
 const { fetchYouTubeVideos } = require("../utils/youtube");
+const { scrapeGiftData } = require('../utils/idngift');
 
 router.get("/schedule", async (req, res) => {
   try {
@@ -57,6 +58,13 @@ router.get('/youtube_jkt48', async (req, res) => {
       source: 'error'
     });
   }
+});
+
+router.get('/health', (req, res) => {
+  res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString()
+  });
 });
 
 
@@ -116,6 +124,50 @@ router.get("/events_jkt48", async (req, res) => {
 
     sendLogToDiscord(errorMessage, "Error");
 
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred'
+    });
+  }
+});
+
+router.get("/gift-ranking/:username/:slug", async (req, res) => {
+  try {
+    const { username, slug } = req.params;
+
+    if (!username || !slug) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid parameters',
+        message: 'Username and slug are required'
+      });
+    }
+
+    const giftData = await scrapeGiftData(username, slug);
+
+    if (!giftData || giftData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No data found',
+        message: `No gift ranking data found for ${username}/${slug}`
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: giftData,
+      meta: {
+        username,
+        slug,
+        total_users: giftData.length,
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error("Error fetching gift ranking data:", error);
+    
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',
