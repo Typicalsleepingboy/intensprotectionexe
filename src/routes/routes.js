@@ -16,6 +16,36 @@ const { fetchHtmlFromJKT48, parseVideoData } = require("../utils/video");
 const { sendLogToDiscord } = require("../other/discordLogger");
 const { fetchYouTubeVideos } = require("../utils/youtube");
 const { scrapeGiftData } = require('../utils/idngift');
+const { filterIDNLivesByUsernames } = require("../utils/idnlivesUtils");
+const { getJKT48Lives } = require('../controllers/liveController');
+const { jkt48Usernames } = require("../roomjkt48/member");
+
+router.get("/idnlive/jkt48", async (req, res) => {
+  try {
+    const filteredData = await filterIDNLivesByUsernames(jkt48Usernames);
+
+    if (filteredData.length === 0) {
+      res.json({
+        message: "Tidak ada member yang sedang live",
+        memberLive: 0,
+        data: [],
+      });
+    } else {
+      res.json({
+        status: "success",
+        message: "Berhasil mendapatkan member yang sedang live",
+        memberLive: filteredData.length,
+        data: filteredData,
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching IDN lives:", error);
+    res.status(500).json({
+      message: "Terjadi kesalahan saat mengambil data IDN live",
+      error: error.message,
+    });
+  }
+});
 
 router.get("/schedule", async (req, res) => {
   try {
@@ -30,6 +60,29 @@ router.get("/schedule", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
+router.get('/showroom/jekatepatlapan',async (req, res) => {
+  try {
+    await getJKT48Lives(req, res);
+
+    await sendLogToDiscord(
+      'Successfully fetched live data.',
+      'Info',
+      { method: req.method, url: req.originalUrl }
+    );
+  } catch (error) {
+    console.error('Error fetching live data:', error.message);
+    await sendLogToDiscord(
+      `Error fetching live data: ${error.message}`,
+      'Error',
+      { method: req.method, url: req.originalUrl }
+    );
+
+    res.status(500).send({ error: 'Failed to fetch live data.' });
+  }
+});
+
 
 router.get('/youtube_jkt48', async (req, res) => {
   try {
@@ -132,51 +185,81 @@ router.get("/events_jkt48", async (req, res) => {
   }
 });
 
+
 router.get("/gift-ranking/:username/:slug", async (req, res) => {
   try {
-    const { username, slug } = req.params;
+      const { username, slug } = req.params;
 
-    if (!username || !slug) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid parameters',
-        message: 'Username and slug are required'
+      // Validasi input
+      if (!username || !slug) {
+          return res.status(400).json({
+              success: false,
+              error: 'Invalid parameters',
+              message: 'Username and slug are required'
+          });
+      }
+
+      // Scraping data
+      const scrapedData = await scrapeGiftData(username, slug);
+
+      // Cek apakah data ditemukan
+      if (!scrapedData.data || scrapedData.data.length === 0) {
+          return res.status(404).json({
+              success: false,
+              error: 'No data found',
+              message: `No gift ranking data found for ${username}/${slug}`
+          });
+      }
+
+      // Response sukses
+      return res.status(200).json({
+          success: true,
+          data: scrapedData.data,
+          meta: {
+              username,
+              slug,
+              total_gifters: scrapedData.total_gifters,
+              time_period: scrapedData.time_period,
+              last_update: scrapedData.last_update,
+              timestamp: new Date().toISOString()
+          }
       });
-    }
-
-    const giftData = await scrapeGiftData(username, slug);
-
-    if (!giftData || giftData.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'No data found',
-        message: `No gift ranking data found for ${username}/${slug}`
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: giftData,
-      meta: {
-        username,
-        slug,
-        total_users: giftData.length,
-      },
-      timestamp: new Date().toISOString()
-    });
 
   } catch (error) {
-    console.error("Error fetching gift ranking data:", error);
-    
-    res.status(500).json({
-      success: false,
-      error: 'Internal Server Error',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred'
-    });
+      // Log error
+      console.error("Error fetching gift ranking data:", error);
+      
+      // Error message untuk logging
+      const errorMessage = `Gift ranking data fetch failed for ${username}/${slug}. Error: ${error.message}`;
+      
+      // Jika menggunakan Discord logging
+      // await sendLogToDiscord(errorMessage, "Error");
+
+      // Custom error responses berdasarkan error type
+      if (error.message.includes('Live stream not found')) {
+          return res.status(404).json({
+              success: false,
+              error: 'Live Stream Not Found',
+              message: 'The requested live stream could not be found'
+          });
+      }
+
+      if (error.message.includes('Access denied')) {
+          return res.status(403).json({
+              success: false,
+              error: 'Access Denied',
+              message: 'Cannot access the live stream data'
+          });
+      }
+
+      // Default error response
+      return res.status(500).json({
+          success: false,
+          error: 'Internal Server Error',
+          message: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred'
+      });
   }
 });
-
-
 
 
 router.get("/events_jkt48/available-months", async (req, res) => {
