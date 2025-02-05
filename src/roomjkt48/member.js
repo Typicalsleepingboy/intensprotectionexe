@@ -50,7 +50,6 @@ const jkt48Usernames = [
     "jkt48_oline",
     "jkt48_regie",
     "jkt48_ribka",
-    "lynx-official",
     "jkt48_kimmy",
 ];
 
