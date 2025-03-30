@@ -51,6 +51,15 @@ const jkt48Usernames = [
     "jkt48_regie",
     "jkt48_ribka",
     "jkt48_kimmy",
+    "jkt48_virgi",
+    "jkt48_auwia",
+    "jkt48_rilly",
+    "jkt48_giaa",
+    "jkt48_maira",
+    "jkt48_ekin",
+    "jkt48_jemima",
+    "jkt48_mikaela",
+    "jkt48_intan",
 ];
 
 module.exports = { jkt48Usernames };
