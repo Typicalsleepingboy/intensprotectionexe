@@ -17,81 +17,78 @@ const parseData = (html) => {
     const $ = cheerio.load(html);
     const table = $(".table");
     const scheduleData = [];
-    
+
     table.find("tbody tr").each((index, element) => {
-        const rowspan = $(element).find("td:first-child").attr("rowspan");
+        const showInfoFull = $(element).find("td:nth-child(1)").text().trim();
+        const setlist = $(element).find("td:nth-child(2)").text().trim();
+        const members = $(element)
+            .find("td:nth-child(3) a")
+            .map((i, el) => $(el).text().trim())
+            .get();
         
-        // Hanya proses baris pertama dari setiap grup (yang punya rowspan)
-        if (rowspan) {
-            const showInfoCell = $(element).find("td:nth-child(1)");
-            const showInfoHTML = showInfoCell.html();
-            const setlistCell = $(element).find("td:nth-child(2)");
-            const setlistHTML = setlistCell.html();
-            
-            // Parse setlist (nama + icon team)
-            const setlistText = setlistCell.text().trim();
-            const teamIcon = setlistCell.find("img").attr("src");
-            
-            // Parse show info dengan mempertimbangkan <br> dan <font>
-            const { showInfo, date, time } = parseShowInfo(showInfoHTML);
-            
-            if (date && time) {
-                scheduleData.push({
-                    _ids: uuidv4(),
-                    showInfo,
-                    setlist: setlistText,
-                    teamIcon: teamIcon || null,
-                    date,
-                    time
+        const birthdayMembers = [];
+        const graduationIcons = [];
+
+        $(element).find("td:nth-child(3)").children().each((i, el) => {
+            if ($(el).is('br') && $(el).next().is('img') && $(el).next().attr('src').includes('cat5.png')) {
+                $(el).next().nextAll('a').each((index, member) => {
+                    birthdayMembers.push($(member).text().trim());
                 });
             }
+            if ($(el).is('img') && $(el).attr('src').includes('cat7.png')) {
+                graduationIcons.push($(el).next('a').text().trim());
+            }
+        });
+
+        const { showInfo, date, time } = parseShowInfo(showInfoFull);
+
+        if (showInfoFull.includes("Show") && !showInfoFull.includes("\n")) {
+            scheduleData.push({
+                _ids: uuidv4(),
+                showInfo,
+                setlist,
+                members,
+                birthdayMembers,
+                graduationIcons,
+                date,
+                time
+            });
         }
     });
-    
+
     const currentTime = moment.tz("Asia/Jakarta");
     const filteredScheduleData = scheduleData.filter(item => {
         const showDateTime = moment.tz(`${item.date} ${item.time}`, "YYYY-MM-DD HH:mm", "Asia/Jakarta");
+        // Keep shows that end less than 4 hours ago
         return showDateTime.clone().add(4, 'hours').isAfter(currentTime);
     });
-    
+
     filteredScheduleData.sort((a, b) => 
         moment(`${a.date} ${a.time}`, "YYYY-MM-DD HH:mm")
         .diff(moment(`${b.date} ${b.time}`, "YYYY-MM-DD HH:mm"))
     );
-    
+
     return filteredScheduleData;
 };
 
-const parseShowInfo = (showInfoHTML) => {
-    // Remove HTML tags dan ambil text
-    const text = showInfoHTML
-        .replace(/<br\s*\/?>/gi, ' ')
-        .replace(/<font[^>]*>/gi, '')
-        .replace(/<\/font>/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    
-    // Regex untuk match: "Minggu, 12.10.2025 Show 19:00"
-    const regex = /(\w+),\s*(\d{1,2}\.\d{1,2}\.\d{4})\s*Show\s*(\d{1,2}:\d{2})/;
-    const match = text.match(regex);
-    
+const parseShowInfo = (showInfoFull) => {
+    const regex = /(\w+), (\d{1,2}\.\d{1,2}\.\d{4})\s*Show\s*(\d{1,2}:\d{2})/;
+    const match = showInfoFull.match(regex);
+    let date, day, time;
+
     if (match) {
-        const day = match[1];
-        const dateStr = match[2];
-        const time = match[3];
-        const date = dateStr.split('.').reverse().join('-'); // 2025-10-12
-        
-        return {
-            showInfo: `${day}, ${date} ${time}`,
-            date,
-            time
-        };
+        day = match[1];
+        date = match[2];
+        time = match[3];
+        date = date.split('.').reverse().join('-');
+    } else {
+        date = showInfoFull.replace(/<br>/g, ' ').replace(/\s+/g, ' ').trim();
     }
-    
+
     return {
-        showInfo: text,
-        date: null,
-        time: null
+        showInfo: `${day ? day + ', ' : ''}${date ? date + ' ' : ''}${time || ''}`,
+        date,
+        time
     };
 };
 
