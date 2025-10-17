@@ -5,7 +5,11 @@ const moment = require("moment-timezone");
 
 const fetchData = async () => {
     const url = "https://takagi.sousou-no-frieren.workers.dev/theater/schedule";
-    const result = await axios.get(url);
+    const result = await axios.get(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+    });
     return result.data;
 };
 
